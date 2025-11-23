@@ -14,18 +14,18 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// HEUTE – UI ruft z.B. /api/today auf
-app.get("/api/today", async (req, res) => {
+// Beliebiger Tag (YYYY-MM-DD)
+app.get("/api/day/:date", async (req, res) => {
+  const { date } = req.params;
   try {
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-    let summary = getDaySummary(today);
+    let summary = getDaySummary(date);
 
     if (!summary) {
-      summary = await collectDayFromShopify(today);
+      summary = await collectDayFromShopify(date);
     }
 
     return res.json({
-      date: today,
+      date,
       umsatz_brutto: summary.umsatzBrutto,
       mwst: summary.mwst,
       gutscheine: summary.gutscheine,
@@ -33,10 +33,11 @@ app.get("/api/today", async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: "Fehler bei /api/today" });
+    return res
+      .status(500)
+      .json({ error: `Fehler bei /api/day/${date}` });
   }
 });
-
 // Offene Tage
 app.get("/api/open-days", (req, res) => {
   try {
@@ -99,3 +100,4 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Backend läuft auf Port ${PORT}`);
 });
+
